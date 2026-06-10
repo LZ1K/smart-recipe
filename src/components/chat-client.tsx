@@ -29,6 +29,14 @@ export function ChatClient({ conversationId: initialId }: ChatClientProps) {
   const loadingRef = useRef(false)
   const loadedIdRef = useRef<string | null>(null)
   const sseConversationRef = useRef<string | null>(null)
+  const abortRef = useRef<AbortController | null>(null)
+
+  // Abort ongoing SSE stream on unmount
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort()
+    }
+  }, [])
 
   // Load conversations list and preferences on mount
   useEffect(() => {
@@ -81,6 +89,11 @@ export function ChatClient({ conversationId: initialId }: ChatClientProps) {
     loadingRef.current = true
     setIsLoading(true)
 
+    // Cancel any previous in-flight request
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
+
     const userMsg: Message = { role: "user", content: message }
     setMessages((prev) => [...prev, userMsg])
 
@@ -89,6 +102,7 @@ export function ChatClient({ conversationId: initialId }: ChatClientProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message, conversationId }),
+        signal: controller.signal,
       })
 
       if (!res.ok) throw new Error("Chat failed")
@@ -100,6 +114,7 @@ export function ChatClient({ conversationId: initialId }: ChatClientProps) {
 
       if (reader) {
         while (true) {
+          if (controller.signal.aborted) break
           const { done, value } = await reader.read()
           if (done) break
           const chunk = decoder.decode(value)
@@ -135,10 +150,14 @@ export function ChatClient({ conversationId: initialId }: ChatClientProps) {
           }
         }
       }
-    } catch (err) {
+    } catch (err: any) {
+      if (err?.name === "AbortError") return
       console.error("Chat error:", err)
       toast.error("消息发送失败，请稍后重试")
     } finally {
+      if (abortRef.current === controller) {
+        abortRef.current = null
+      }
       loadingRef.current = false
       setIsLoading(false)
     }

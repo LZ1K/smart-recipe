@@ -50,6 +50,9 @@ export async function DELETE(req: Request) {
   }
 
   const { recipeId } = await req.json()
+  if (!recipeId) {
+    return NextResponse.json({ error: "缺少 recipeId" }, { status: 400 })
+  }
 
   await prisma.favorite.deleteMany({
     where: { userId: session.user.id, recipeId },

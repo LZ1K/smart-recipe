@@ -22,20 +22,25 @@ export default function RegisterPage() {
     setError("")
     setLoading(true)
 
-    const res = await fetch("/api/auth/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password }),
-    })
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+      })
 
-    if (!res.ok) {
-      const data = await res.json()
-      setError(data.error || "注册失败，请重试")
+      if (!res.ok) {
+        const data = await res.json()
+        setError(data.error || "注册失败，请重试")
+        return
+      }
+
+      router.push("/login?registered=true")
+    } catch {
+      setError("网络错误，请检查网络后重试")
+    } finally {
       setLoading(false)
-      return
     }
-
-    router.push("/login?registered=true")
   }
 
   return (

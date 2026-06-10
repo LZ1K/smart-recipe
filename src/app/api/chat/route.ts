@@ -23,6 +23,13 @@ export async function POST(req: Request) {
     conversation = await prisma.conversation.findFirst({
       where: { id: conversationId, userId: session.user.id },
     })
+    // If not found, check whether the conversation exists at all (cross-user access)
+    if (!conversation) {
+      const other = await prisma.conversation.findUnique({ where: { id: conversationId } })
+      if (other) {
+        return NextResponse.json({ error: "无权访问该对话" }, { status: 403 })
+      }
+    }
   }
   if (!conversation) {
     conversation = await prisma.conversation.create({

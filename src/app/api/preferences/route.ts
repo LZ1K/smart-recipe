@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { PreferenceSchema } from "@/lib/validations"
 
 export async function GET() {
   const session = await auth()
@@ -22,7 +23,13 @@ export async function PUT(req: Request) {
     return NextResponse.json({ error: "请先登录" }, { status: 401 })
   }
 
-  const { type, value } = await req.json()
+  const body = await req.json()
+  const parsed = PreferenceSchema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 })
+  }
+
+  const { type, value } = parsed.data
 
   const exists = await prisma.userPreference.findFirst({
     where: { userId: session.user.id, type, value },
