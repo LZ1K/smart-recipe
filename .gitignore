@@ -44,3 +44,5 @@ next-env.d.ts
 .claude/
 check-db.ts
 *.tmp
+
+.vercel

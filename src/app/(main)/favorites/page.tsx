@@ -3,12 +3,27 @@ import { prisma } from "@/lib/prisma"
 import { RecipeCard } from "@/components/ui/recipe-card"
 import { Heart } from "lucide-react"
 
+interface FavRecipe {
+  id: string
+  recipe: {
+    slug: string
+    name: string
+    description: string
+    cookingTime: number
+    difficulty: string
+    servings: number
+    tags: string[]
+    imageUrl: string | null
+    category: { name: string }
+  }
+}
+
 export const dynamic = "force-dynamic"
 
 export default async function FavoritesPage() {
   const session = await auth()
 
-  const favorites = await prisma.favorite.findMany({
+  const favorites: FavRecipe[] = await prisma.favorite.findMany({
     where: { userId: session!.user!.id! },
     include: { recipe: { include: { category: true } } },
     orderBy: { createdAt: "desc" },
