@@ -32,23 +32,11 @@ export function SeasonalCard() {
   }, [])
 
   if (loading) {
-    return (
-      <Card className="border-[#E8D5C4]">
-        <CardContent className="p-3">
-          <p className="text-xs text-[#8B7355]">加载季节数据...</p>
-        </CardContent>
-      </Card>
-    )
+    return null
   }
 
   if (!data?.ingredients?.length) {
-    return (
-      <Card className="border-[#E8D5C4]">
-        <CardContent className="p-3">
-          <p className="text-xs text-[#8B7355]">季节数据暂不可用</p>
-        </CardContent>
-      </Card>
-    )
+    return null
   }
 
   return (
