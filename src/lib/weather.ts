@@ -110,11 +110,17 @@ async function fetchFromWttr(options: {
     const current = json.current_condition?.[0]
     if (!current) return null
 
-    // 反向地理编码：从 nearest_area 提取城市名
+    // 反向地理编码：取 region(省) + country，避免 areaName 返回偏僻音译名
     const area = json.nearest_area?.[0]
-    const areaName = area?.areaName?.[0]?.value || options.city || "未知"
+    const region = area?.region?.[0]?.value || ""
     const country = area?.country?.[0]?.value || ""
-    const city = country ? `${areaName}, ${country}` : areaName
+    const areaName = area?.areaName?.[0]?.value || ""
+    // 优先用 region: "Guangdong, China"，region 为空则回退 areaName
+    const city = region
+      ? `${region}, ${country}`
+      : areaName
+        ? `${areaName}, ${country}`
+        : (options.city || "未知")
 
     return {
       temperature: parseFloat(current.temp_C),
